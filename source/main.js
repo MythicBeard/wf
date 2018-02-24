@@ -1,12 +1,12 @@
 var loading = true;
-/*
+
 if ('speechSynthesis' in window) {
- // Synthesis support. Make your web apps talk!
-}
-else {
 	
 }
-*/
+else {
+	alert('Your junky web browser does not support speech synthesis.  Upgrade, or use something decent, to hear voice tracking.');
+}
+
 
 /* ----- Help ----- */
 var help_open = function () {
@@ -39,7 +39,6 @@ $(document).scroll(function(e) {
 var collapse_tab = function (tab) {
 	var ht = $('#'+tab).css('height');
 	if (ht === '40px') {
-		//$('#'+tab).css('height', 'auto');
 		$('#'+tab).animate({
 			height: $('#'+tab).get(0).scrollHeight
 		}, 200, function(){
@@ -48,7 +47,6 @@ var collapse_tab = function (tab) {
 		$('#'+tab+' .collapse_tab').css('color', 'rgb(0,155,0)');
 	}
 	else {
-		//$('#'+tab).css('max-height', '40px');
 		$('#'+tab).stop().animate({'height': '40px'}, 200);
 		$('#'+tab+' .collapse_tab').css('color', 'rgb(225,0,0)');
 	}
@@ -115,7 +113,7 @@ speech.settings = {
 };
 	
 speech.say = function (phrase) {
-	if (!speech.on)
+	if (!speech.on || !'speechSynthesis' in window)
 		return;
 	var synth = window.speechSynthesis;
 	speech.voices = window.speechSynthesis.getVoices();
@@ -164,7 +162,7 @@ speech.next = function () {
 };
 
 speech.addqueue = function (phrase) {
-	if (!speech.on)
+	if (!speech.on || !'speechSynthesis' in window)
 		return;
 	speech.queue[phrase] = true;
 	if (speech.interval) 
@@ -337,8 +335,6 @@ $(window).scroll(function(){
 		$('#help').css('top', ($(window).scrollTop()+24) + "px");
 		$('#wf').css('top', ($(window).scrollTop()+24) + "px");
 	}
-	//$('#to_top').stop().animate({'top': ($(window).scrollTop()+300) + 'px'}, 'fast');
-	//$('#to_bottom').stop().animate({'top': ($(window).scrollTop()+340) + 'px'}, 'fast');
 });
 
 function to_top() {
@@ -355,7 +351,6 @@ var collapse_all = function () {
 	$('.info_box').each(function( index ) {
 		var id = $(this).attr('id');
 		if (id != 'conclave') {
-			//$('#'+id).css('height', '40px');
 			$('#'+id).stop().animate({'height': '40px'}, 200);
 			$('#'+id+' .collapse_tab').css('color', 'rgb(225,0,0)');
 		}
@@ -366,7 +361,6 @@ var collapse_all = function () {
 var expand_all = function () {
 	$('.info_box').each(function( index ) {
 		var id = $(this).attr('id');
-		//$('#'+id).css('height', 'auto');
 		$('#'+id).animate({
 			height: $('#'+id).get(0).scrollHeight
 		}, 200, function(){
@@ -423,7 +417,7 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 	setTimeout(function(){ track.cetusCycle(cetusc.time, cetusLeft); }, 3000);
 
 
-	// Daily Deal (Darvo) ----- */
+	/* ----- Daily Deal (Darvo) ----- */
 	let darvos = wf.dailyDeals;
 	$('#dailyDeals #info tr').remove();
 	for (let i=0; i<darvos.length; i++) {
@@ -449,8 +443,8 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 	}
 	$('#voidTrader #active').html(vt.active);
 	$('#voidTrader #left').html(vt.left);
-	// if inventory > 0
 	$('#preview #info tr').remove();
+	if (wf.voidTrader.inventory.length > 0)
 	for (let i=0; i<wf.voidTrader.inventory.length; i++) {
 		var item = wf.voidTrader.inventory[i];
 		item.credits = item.credits.toString().replace(new RegExp("000$","g"), 'k');
@@ -567,7 +561,7 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 		var news = {
 			'msg': wf.news[i].message,
 			'link': wf.news[i].link,
-			'eta': wf.news[i].eta.replace(new RegExp("\\d+s","g"), ''),//.replace('in ', '').replace(' ago', ''),
+			'eta': wf.news[i].eta.replace(new RegExp("\\d+s","g"), ''),
 		};
 		let html = '<td>['+news.eta+']</br><a href="'+news.link+'" target="_blank">'+news.msg+'</a></td>';
 		$('#news #info').append('<tr>'+html+'</tr>');	
@@ -613,7 +607,9 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 };
 get_data();
 
-// Preview Void Stuff
+
+
+/* ----- Preview Void Stuff ----- */
 var void_close = function () {
 	$('#preview_void').css('visibility', 'hidden');
 };
@@ -621,7 +617,7 @@ var void_open = function () {
 	$('#preview_void').css('visibility', 'visible');
 };
 $(document).keydown(function(e) {
-    // ESCAPE key pressed
+    // ESC
     if (e.keyCode == 27) {
         void_close();
 		help_close();
