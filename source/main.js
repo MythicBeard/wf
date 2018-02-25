@@ -120,7 +120,6 @@ speech.say = function (phrase) {
 	var voice = setInterval(function() {
 		if (!speech.voices || speech.voices.length == 0)
 			return;
-		
 		var msg = new SpeechSynthesisUtterance(phrase);
 		msg.voice = speech.voices[4];
 		msg.pitch = 1.1;
@@ -138,9 +137,6 @@ speech.say = function (phrase) {
 			vol = 0;
 		msg.volume = vol;
 		synth.speak(msg);
-		speech.mute = function () {
-			
-		};
 		clearInterval(voice)
 	}, 200);	
 };
@@ -164,11 +160,13 @@ speech.next = function () {
 speech.addqueue = function (phrase) {
 	if (!speech.on || !'speechSynthesis' in window)
 		return;
-	speech.queue[phrase] = true;
+	if (!speech.queue[phrase])
+		speech.queue[phrase] = true;
+console.log(speech.queue[phrase]);
 	if (speech.interval) 
 		return;
-	speech.next();
-	speech.interval = setInterval(speech.next, 3000);
+	//speech.next();
+	speech.interval = setInterval(speech.next, 2000);
 };
 
 speech.togglemute = function () {
@@ -228,12 +226,12 @@ track.cetusCycle = function (time, left) {
 	else
 		next = 'day';
 	if (loading !== true && stop !== true)
-		speech.addqueue('Cetus '+next+'time in... '+min+' minutes.');
+		speech.addqueue('Cetus '+next+'time in... '+min+' minutes');
 };
 
 
 track.alerts = function (alerts) {
-	if (!track.tracking.alerts )
+	if (!track.tracking.alerts || alerts.length <= 0)
 		return;
 	for (let i=0; i<alerts.length; i++) {
 		var at = alerts[i];
@@ -255,7 +253,7 @@ track.alerts = function (alerts) {
 		var d = new Date();
 		var t = d.getTime();
 		var diff = t-Number(track.old.alerts[key]);
-		if (diff > 3600000)
+		if (diff > 7200000)
 			delete track.old.alerts[key];
 	}
 };
@@ -282,7 +280,7 @@ track.fissures = function (fissures) {
 		var d = new Date();
 		var t = d.getTime();
 		var diff = t-Number(track.old.fissures[key]);
-		if (diff > 3600000)
+		if (diff > 7200000)
 			delete track.old.fissures[key];
 	}
 };
