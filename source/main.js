@@ -54,9 +54,12 @@ refresh.toggle = function () {
 };
 
 setTimeout(function(){
-	$('#rrate').val(refresh.rate)
+	$('#rrate').val(refresh.rate);
 	if (refresh.on === false)
 		$('#header #refresh').css('color', 'rgb(155,0,0)');
+	else
+		refresh.start();
+	
 	$('#rrate').on('input',function(e){
 		refresh.rate = $('#rrate').val();
 		if (refresh.rate == '')
@@ -67,7 +70,7 @@ setTimeout(function(){
 			refresh.start();
 		localStorage.setItem('refresh.rate', refresh.rate);
 	});
-}, 10);
+}, 300);
 
 
 /* ----- Speech ----- */
@@ -95,7 +98,13 @@ setTimeout(function () {
 	if (speech.on === false)
 		$('#header #sound').css('color', 'rgb(155,0,0)');
 	
-	$('#volume').val(speech.volume*100);
+	$('#volume').on('input',function(e){
+		var vol = $('#volume').val();
+		localStorage.setItem('msg.volume', vol);
+	});
+	
+	
+	$('#volume').val(speech.volume);
 	
 }, 10);
 
@@ -124,7 +133,7 @@ speech.say = function (phrase) {
 			vol = 1;
 		else if (vol < 0.01)
 			vol = .01;
-		localStorage.setItem('msg.volume', vol);
+		localStorage.setItem('msg.volume', vol*100);
 		msg.volume = vol;
 		synth.speak(msg);
 		clearInterval(voice)
@@ -399,7 +408,7 @@ $('#header #refresh').css('color', 'rgb(185,185,0)');
 var wf = {};
 $.getJSON('https://ws.warframestat.us/pc', function (data) {
 	wf = data;
-	
+
 	/* ----- Sorties ----- */
 	var sortie = {
 		'hr': wf.sortie.eta.match(new RegExp("\\d+h")),
