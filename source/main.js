@@ -1,11 +1,14 @@
 var loading = true;
 
 if ('speechSynthesis' in window) {
-	
 }
 else {
-	alert('Your junky web browser does not support speech synthesis.  Upgrade, or use something decent, to hear voice tracking.');
+	alert('Your antiquated web browser does not support speech synthesis.  Upgrade, or use something decent, to enable voice tracking.');
 }
+
+
+
+
 
 
 /* ----- Help ----- */
@@ -25,7 +28,7 @@ var scrollD = function () {
 };
 
 var scrollU = function () {
-	$('#header').css('height', '80px').css('padding-top', '25px').css('font-size', '24px');
+	$('#header').css('height', '80px').css('padding-top', '20px').css('font-size', '24px');
 	$('#header #icons').css('top', '29px');
 	$('#header img').css('height', '40px');
 };
@@ -50,8 +53,8 @@ var collapse_tab = function (tab) {
 		$('#'+tab).stop().animate({'height': '40px'}, 200);
 		$('#'+tab+' .collapse_tab').css('color', 'rgb(225,0,0)');
 	}
-	var audio = new Audio('source/click1.mp3');
-	audio.play();
+	//var audio = new Audio('source/click1.mp3');
+	//audio.play();
 };
 
 
@@ -83,7 +86,7 @@ refresh.toggle = function () {
 		refresh.start();
 	}
 	var audio = new Audio('source/click1.mp3');
-	audio.play();
+	//audio.play();
 };
 
 setTimeout(function(){
@@ -160,17 +163,20 @@ speech.next = function () {
 speech.addqueue = function (phrase) {
 	if (!speech.on || !'speechSynthesis' in window)
 		return;
+	var total = Object.keys(speech.queue).length;
+	if (total == 0)
+		speech.queue['tenno!'] = true;
 	if (!speech.queue[phrase])
 		speech.queue[phrase] = true;
-console.log(speech.queue[phrase]);
 	if (speech.interval) 
 		return;
-	//speech.next();
-	speech.interval = setInterval(speech.next, 2000);
+	speech.interval = setInterval(speech.next, 1000);
 };
 
 speech.togglemute = function () {
 	speech.on = !speech.on;
+	var someVarName = "value";
+	localStorage.setItem("someVarName", someVarName);
 	if (speech.on) {
 		$('#header #sound').css('color', 'rgb(0,155,0)');
 	}
@@ -179,9 +185,11 @@ speech.togglemute = function () {
 		speech.queue = {};
 		$('#header #sound').css('color', 'rgb(155,0,0)');
 	}
-	var audio = new Audio('source/click1.mp3');
-	audio.play();
+	//var audio = new Audio('source/click1.mp3');
+	//audio.play();
 };
+
+speech.addqueue('hello');
 
 
 /* ------ Tracking ----- */
@@ -196,10 +204,27 @@ var track = {
 		'alerts': true,
 		'cetusCycle': true,
 		'fissures': false,
-		'invasions': false,
+		//'invasions': false,
 	},
 	'bad': [],
 };
+
+
+track.get_saved = function () {
+	for (let key in track.tracking) {
+		var saved = localStorage.getItem('track.tracking.'+key);
+		if (saved == null) {
+			localStorage.setItem('track.tracking.'+key, track.tracking[key]);
+			console.log(key+' is not saved');
+		}
+		else if (saved == 'true')
+			track.tracking[key] = true;
+		else if (saved == 'false')
+			track.tracking[key] = false;
+	}
+};
+track.get_saved();
+
 
 var cetus_alarm = {
 	15:true,
@@ -226,7 +251,7 @@ track.cetusCycle = function (time, left) {
 	else
 		next = 'day';
 	if (loading !== true && stop !== true)
-		speech.addqueue('Cetus '+next+'time in, '+min+' minutes');
+		speech.addqueue('Cetus '+next+'time is in, '+min+' minutes');
 };
 
 
@@ -247,7 +272,7 @@ track.alerts = function (alerts) {
 		if (at.mission.reward.itemString == '')
 			at.mission.reward.itemString = at.mission.reward.credits+' Credits';
 		if (loading !== true)
-			speech.addqueue('Mission alert, '+at.mission.reward.itemString);
+			speech.addqueue('Mission alert for, '+at.mission.reward.itemString);
 	}
 	for (let key in track.old.alerts) {
 		var d = new Date();
@@ -274,7 +299,7 @@ track.fissures = function (fissures) {
 		var t = d.getTime();
 		track.old.fissures[fs.id] = t;
 		if (loading !== true)
-			speech.addqueue('Void fissure, T'+fs.tierNum+' '+fs.missionType);
+			speech.addqueue('Void fissure open, T'+fs.tierNum+' '+fs.missionType);
 	}
 	for (let key in track.old.fissures) {
 		var d = new Date();
@@ -287,34 +312,30 @@ track.fissures = function (fissures) {
 
 
 
-
+// toggle sound option
 var toggleoption = function (opt) {
 	track.tracking[opt] = !track.tracking[opt];
-	if (track.tracking[opt]) {
+	if (track.tracking[opt] === true)
 		$('#'+opt+' .sound_icon').css('color', 'rgb(0,155,0)');
-	}
-	else {
+	else
 		$('#'+opt+' .sound_icon').css('color', 'rgb(155,0,0)');
-	}
-	var audio = new Audio('source/click1.mp3');
-	audio.play();
+	localStorage.setItem('track.tracking.'+opt, track.tracking[opt]);
 };
 
-
+// check settings and set icons
 setTimeout(function () {
 	for (let key in track.tracking) {
-		if (!track.tracking[key])
-			continue;
-		$('#'+key+' .sound_icon').css('color', 'rgb(0,155,0)');
+		if (track.tracking[key] === true)
+			$('#'+key+' .sound_icon').css('color', 'rgb(0,155,0)');
 	}
-}, 0);
+}, 500);
 
 
 
 /* ----- Top / Bottom ----- */
 
 $(window).scroll(function(){
-	$("#header").stop(true,false)
+	//$("#header").stop(true,false);
 	$("#header").css('top', ($(window).scrollTop()+0) + "px");
 	$("#collapse_all").css('top', ($(window).scrollTop()+300) + "px");
 	$("#expand_all").css('top', ($(window).scrollTop()+340) + "px");
@@ -347,7 +368,7 @@ var collapse_all = function () {
 		}
 	});
 	var audio = new Audio('source/click1.mp3');
-	audio.play();
+	//audio.play();
 };
 var expand_all = function () {
 	$('.info_box').each(function( index ) {
@@ -360,7 +381,7 @@ var expand_all = function () {
 		$('#'+id+' .collapse_tab').css('color', 'rgb(0,155,0)');
 	});
 	var audio = new Audio('source/click1.mp3');
-	audio.play();
+	//audio.play();
 };
 
 
@@ -388,7 +409,10 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 	
 	
 	/* ----- Rep ----- */
-	$('#rep #left').html((sortie.hr+7)+'h '+sortie.mn+'m');
+	if ((sortie.hr+7) >= 24)
+		$('#rep #left').html(sortie.mn+'m');
+	else
+		$('#rep #left').html((sortie.hr+7)+'h '+sortie.mn+'m');
 
 
 	/* ----- Cetus Cycle ----- */
@@ -609,6 +633,14 @@ var void_open = function () {
 	$('#preview_void').css('visibility', 'visible');
 };
 $(document).keydown(function(e) {
+	// CTRL+R & F5
+	if (event.keyCode == 116 || event.keyCode == 82 && e.ctrlKey) {
+		event.keyCode = 0;
+		event.cancelBubble = true;
+		$('#header #refresh').css('color', 'rgba(185, 185, 0, 1)');
+		get_data();
+		//return false;
+	}
     // ESC
     if (e.keyCode == 27) {
         void_close();
