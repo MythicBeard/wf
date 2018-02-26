@@ -23,6 +23,8 @@ div, p, a, ul, li, tr, td, img {
 	-webkit-text-size-adjust:none !important;
 	text-size-adjust:none !important;
 }
+
+img {image-rendering: -webkit-optimize-contrast;}
 	
 
 /* Links */
@@ -77,8 +79,20 @@ body {
 	visibility: hidden;	
 }
 
-#preview_void {
 
+#preview_load {
+	//visibility: hidden;
+	display: none;
+	opacity: 0;
+	background: rgba(0,0,0,0.8);
+}
+
+#preview_load #sofia {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%,-50%);
+	padding: 10px;
 }
 
 #preview {
@@ -254,12 +268,19 @@ body {
 	font-weight: 900;
 	padding-top: 20px; /* change this */
 	transition: height .1s, padding .1s, font-size .1s;
+	animation-timing-function: linear;
 }
 
 #header #logo {
 	width: 600px;
 	margin: 0px auto;
 	padding-right: 52px;
+}
+
+#header #logo img {
+	//-webkit-filter: drop-shadow(0px 0px 5px yellow);
+	//filter: drop-shadow(0px 0px 5px yellow);
+	image-rendering: -webkit-optimize-contrast;
 }
 
 #header #icons {
@@ -295,6 +316,7 @@ body {
 	height: 40px;
 	transition: all .25s;
 	vertical-align: -7px;
+	opacity: 1;
 }
 
 

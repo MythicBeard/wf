@@ -72,6 +72,12 @@ setTimeout(function(){
 	});
 }, 300);
 
+refresh.flash = function () {
+	$('#logo img').animate({opacity: 0.25}, 400, 'linear');
+	setTimeout(function () {$('#logo img').animate({opacity: 1}, 400);}, 600, 'linear');
+};
+//setTimeout(function(){refresh.flash();}, 400);
+
 
 /* ----- Speech ----- */
 var speech = {
@@ -135,6 +141,12 @@ speech.say = function (phrase) {
 			vol = .01;
 		localStorage.setItem('msg.volume', vol*100);
 		msg.volume = vol;
+		msg.onstart = function () {
+			$('#header #logo img').css('filter', 'drop-shadow(0px 0px 3px goldenrod)');
+		};
+		msg.onend = function () {
+			$('#header #logo img').css('filter', 'none');
+		};
 		synth.speak(msg);
 		clearInterval(voice)
 	}, 200);	
@@ -152,6 +164,7 @@ speech.next = function () {
 	var total = Object.keys(speech.queue).length;
 	if (total !== 0)
 		return;
+	
 	clearInterval(speech.interval);
 	delete speech.interval;
 };
@@ -183,8 +196,6 @@ speech.togglemute = function () {
 	//var audio = new Audio('source/click1.mp3');
 	//audio.play();
 };
-
-speech.addqueue('hello');
 
 
 /* ------ Tracking ----- */
@@ -423,8 +434,11 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 	
 	
 	/* ----- Rep ----- */
-	if ((sortie.hr+7) >= 24)
-		$('#rep #left').html(sortie.mn+'m');
+	if ((sortie.hr+7) >= 24) {
+		var hr = (sortie.hr+7)-24;
+		
+		$('#rep #left').html(hr+'h '+sortie.mn+'m');
+	}
 	else
 		$('#rep #left').html((sortie.hr+7)+'h '+sortie.mn+'m');
 
@@ -443,7 +457,7 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 	var cetusLeft = wf.cetusCycle.timeLeft.replace(new RegExp(" \\d+s","g"), '');
 	$('#cetusCycle #left').html(cetusLeft);
 	
-	setTimeout(function(){ track.cetusCycle(cetusc.time, cetusLeft); }, 3000);
+	setTimeout(function(){ track.cetusCycle(cetusc.time, cetusLeft); }, 300);
 
 
 	/* ----- Daily Deal (Darvo) ----- */
@@ -492,14 +506,19 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 
 	/* ----- Events ----- */
 	$('#events #info tr').remove();
+	
 	for (let i=0; i<wf.events.length; i++) {
 		var evt = {};
 		evt.name = wf.events[i].description;
-		evt.reward = wf.events[i].rewards[0].asString;
+		var html = '<td class="evt_name">'+evt.name+'</td>';
+		
+		if (wf.events[i].rewards.length > 0) {
+			evt.reward = wf.events[i].rewards[0].asString;
+			evt.thumb = wf.events[i].rewards[0].thumbnail;
+			html += '<td class="evt_reward"><img src="'+evt.thumb+'" onerror="this.style.display=\'none\'" alt="">'+evt.reward+'</td>';
+		}
 		evt.eta = Math.floor(wf.events[i].health);
-		let html = '<td class="evt_name">'+evt.name+'</td>'
-			+ '<td class="evt_reward"><img src="'+wf.events[i].rewards[0].thumbnail+'" onerror="this.style.display=\'none\'" alt="">'+evt.reward+'</td>'
-			+ '<td class="evt_eta">'+evt.eta+'% HP</td>'
+		html += '<td class="evt_eta">'+evt.eta+'% HP</td>';
 		;
 		evt.background = 'linear-gradient(to right, rgba(0, 105, 0, 1),	rgba(0, 105, 0, 1) '+evt.eta+'%, black, black, rgba(105, 0, 0, 1) '+evt.eta+'%, rgba(105, 0, 0, 1))';
 		$('#events #info').append('<tr style="background: '+evt.background+'">'+html+'</tr>');
@@ -521,7 +540,7 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 		if (i < wf.alerts.length-1)
 			$('#alerts #info').append('<tr class="al_spacer"><td colspan="3"></td></tr>');
 	}
-	setTimeout(function() {track.alerts(wf.alerts);}, 2000);
+	setTimeout(function() {track.alerts(wf.alerts);}, 200);
 
 
 	/* ----- Fissures ----- */
@@ -557,7 +576,7 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 	$('#fissures #info').append('<tr class="fs_spacer"><td colspan="4"</tr>');
 	for (let i=0; i<fisses.Axi.length; i++) show_fiss(fisses.Axi[i]);
 	
-	setTimeout(function() {track.fissures(wf.fissures);}, 1500);
+	setTimeout(function() {track.fissures(wf.fissures);}, 150);
 
 
 	/* ----- Invasions ----- */
@@ -631,6 +650,7 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 	
 	/* ----- Finish ----- */
 	$('#header #refresh').css('color', 'rgb(0,155,0)');
+	refresh.flash();
 	if (loading !== false)
 		setTimeout(function () { loading = false; }, 9000);
 });
@@ -700,3 +720,5 @@ window.mobilecheck = function() {
 if (window.mobilecheck() === true) {
 	$('html').css('background', 'black');
 }
+else
+	speech.addqueue('hello');
