@@ -1,119 +1,105 @@
 var loading = true;
-
-if ('speechSynthesis' in window) {
-}
-else {
+if ('speechSynthesis' in window) {} else
 	alert('Your antiquated web browser does not support speech synthesis.  Upgrade, or use something decent, to enable voice tracking.');
-}
-
-
-
-
-
-
-/* ----- Help ----- */
-var help_open = function () {
-	$('#preview_help').css('visibility', 'visible');
-};
-
-var help_close = function () {
-	$('#preview_help').css('visibility', 'hidden');
-};
-
-/* ----- Header shrink ----- */
-var scrollD = function () {
-	$('#header').css('height', '40px').css('padding-top', '3px').css('font-size', '20px');
-	$('#header #icons').css('top', '10px');
-	$('#header img').css('height', '30px');
-};
-
-var scrollU = function () {
-	$('#header').css('height', '80px').css('padding-top', '20px').css('font-size', '24px');
-	$('#header #icons').css('top', '29px');
-	$('#header img').css('height', '40px');
-};
-
-$(document).scroll(function(e) {
-	$(window).scrollTop() > 10 ? scrollD() : scrollU();
-});
-
-
-/* ----- Collapse Tab ----- */
-var collapse_tab = function (tab) {
-	var ht = $('#'+tab).css('height');
-	if (ht === '40px') {
-		$('#'+tab).animate({
-			height: $('#'+tab).get(0).scrollHeight
-		}, 200, function(){
-			$(this).height('auto');
-		});
-		$('#'+tab+' .collapse_tab').css('color', 'rgb(0,155,0)');
-	}
-	else {
-		$('#'+tab).stop().animate({'height': '40px'}, 200);
-		$('#'+tab+' .collapse_tab').css('color', 'rgb(225,0,0)');
-	}
-	//var audio = new Audio('source/click1.mp3');
-	//audio.play();
-};
 
 
 /* ----- Auto refresh ----- */
-
 var refresh = {
 	'rate': 30,
+	'on': true,
 };
+
+refresh.get_saved = function () {
+	var saved = localStorage.getItem('refresh.on');
+	if (saved == null)
+		localStorage.setItem('refresh.on', refresh.on);
+	else if (saved == 'true')
+		refresh.on = true;
+	else if (saved == 'false')
+		refresh.on = false;
+	saved = localStorage.getItem('refresh.rate');
+	if (saved != null)
+		refresh.rate = saved;
+	else
+		localStorage.setItem('refresh.rate', refresh.rate);
+};
+refresh.get_saved();
+
 refresh.start = function () {
 	var rate = refresh.rate*1000;
 	clearInterval(refresh.interval);
 	refresh.interval = setInterval(function(){get_data();}, rate);
 	$('#header #refresh').css('color', 'rgb(0,155,0)');
-	refresh.on = true;
+	localStorage.setItem('refresh.on', 'true');
 };
-refresh.start();
 
 refresh.stop = function () {
 	clearInterval(refresh.interval);
 	$('#header #refresh').css('color', 'rgb(155,0,0)');
-	refresh.on = false;
+	localStorage.setItem('refresh.on', 'false');
 };
 
 refresh.toggle = function () {
-	if (refresh.on)
+	if (refresh.on) {
+		refresh.on = false;
 		refresh.stop();
+	}
 	else {
 		get_data();
+		refresh.on = true;
 		refresh.start();
 	}
-	var audio = new Audio('source/click1.mp3');
+	//var audio = new Audio('source/click1.mp3');
 	//audio.play();
 };
 
 setTimeout(function(){
+	$('#rrate').val(refresh.rate)
+	if (refresh.on === false)
+		$('#header #refresh').css('color', 'rgb(155,0,0)');
 	$('#rrate').on('input',function(e){
 		refresh.rate = $('#rrate').val();
 		if (refresh.rate == '')
 			refresh.rate = 30;
 		if (refresh.rate < 5)
 			refresh.rate = 5;
-		refresh.start();
+		if (refresh.on !== false)
+			refresh.start();
+		localStorage.setItem('refresh.rate', refresh.rate);
 	});
-}, 100);
+}, 10);
 
 
 /* ----- Speech ----- */
 var speech = {
 	'on': true,
 	'queue': {},
+	'volume': 100,
 };
+
+speech.get_saved = function () {
+	var saved = localStorage.getItem('speech.on');
+	if (saved == null)
+		localStorage.setItem('speech.on', speech.on);
+	else if (saved == 'true')
+		speech.on = true;
+	else if (saved == 'false')
+		speech.on = false;
+	saved = localStorage.getItem('msg.volume');
+	if (saved != null)
+		speech.volume = saved;
+};
+speech.get_saved();
+
+setTimeout(function () {
+	if (speech.on === false)
+		$('#header #sound').css('color', 'rgb(155,0,0)');
+	
+	$('#volume').val(speech.volume*100);
+	
+}, 10);
+
 speech.voices = window.speechSynthesis.getVoices();
-speech.settings = {
-	'all': true,
-	'alerts': true,
-	'fissures': true,
-	'invasions': false,
-	'cetusalarm': true,
-};
 	
 speech.say = function (phrase) {
 	if (!speech.on || !'speechSynthesis' in window)
@@ -127,17 +113,18 @@ speech.say = function (phrase) {
 		msg.voice = speech.voices[4];
 		msg.pitch = 1.1;
 		msg.rate = 1;
-		var vol;
+		var vol = $('#volume').val();
 		if (vol !== '')
 			vol = ($('#volume').val())/100;
 		else {
-			$('#volume').val(0);
-			vol = 0;
+			$('#volume').val(1);
+			vol = .01;
 		}
 		if (vol > 1)
 			vol = 1;
-		else if (vol < 0.00)
-			vol = 0;
+		else if (vol < 0.01)
+			vol = .01;
+		localStorage.setItem('msg.volume', vol);
 		msg.volume = vol;
 		synth.speak(msg);
 		clearInterval(voice)
@@ -175,8 +162,7 @@ speech.addqueue = function (phrase) {
 
 speech.togglemute = function () {
 	speech.on = !speech.on;
-	var someVarName = "value";
-	localStorage.setItem("someVarName", someVarName);
+	localStorage.setItem('speech.on', speech.on);
 	if (speech.on) {
 		$('#header #sound').css('color', 'rgb(0,155,0)');
 	}
@@ -213,10 +199,8 @@ var track = {
 track.get_saved = function () {
 	for (let key in track.tracking) {
 		var saved = localStorage.getItem('track.tracking.'+key);
-		if (saved == null) {
+		if (saved == null)
 			localStorage.setItem('track.tracking.'+key, track.tracking[key]);
-			console.log(key+' is not saved');
-		}
 		else if (saved == 'true')
 			track.tracking[key] = true;
 		else if (saved == 'false')
@@ -225,6 +209,12 @@ track.get_saved = function () {
 };
 track.get_saved();
 
+setTimeout(function () {
+	for (let key in track.tracking) {
+		if (track.tracking[key] === true)
+			$('#'+key+' .sound_icon').css('color', 'rgb(0,155,0)');
+	}
+}, 10);
 
 var cetus_alarm = {
 	15:true,
@@ -250,10 +240,9 @@ track.cetusCycle = function (time, left) {
 		next = 'night';
 	else
 		next = 'day';
-	if (loading !== true && stop !== true)
+	//if (loading !== true && stop !== true)
 		speech.addqueue('Cetus '+next+'time is in, '+min+' minutes');
 };
-
 
 track.alerts = function (alerts) {
 	if (!track.tracking.alerts || alerts.length <= 0)
@@ -283,7 +272,6 @@ track.alerts = function (alerts) {
 	}
 };
 
-
 track.fissures = function (fissures) {
 	if (!track.tracking.fissures)
 		return;
@@ -310,8 +298,6 @@ track.fissures = function (fissures) {
 	}
 };
 
-
-
 // toggle sound option
 var toggleoption = function (opt) {
 	track.tracking[opt] = !track.tracking[opt];
@@ -322,18 +308,74 @@ var toggleoption = function (opt) {
 	localStorage.setItem('track.tracking.'+opt, track.tracking[opt]);
 };
 
-// check settings and set icons
-setTimeout(function () {
-	for (let key in track.tracking) {
-		if (track.tracking[key] === true)
-			$('#'+key+' .sound_icon').css('color', 'rgb(0,155,0)');
+
+/* ----- Collapse / Expand ----- */
+var collapsed_saved = function () {
+	$('.info_box').each(function( index ) {
+		var id = $(this).attr('id');
+		var saved = localStorage.getItem('div.'+id);
+		if (saved == null)
+			return true;
+		else
+			$('#'+id).css('height', saved);
+			//$('#'+id).stop().animate({'height': saved}, 10);
+	});
+};
+setTimeout(function(){collapsed_saved();}, 20);
+
+
+var collapse_all = function () {
+	$('.info_box').each(function( index ) {
+		var id = $(this).attr('id');
+		if (id == 'conclave')
+			return true;
+		$('#'+id).stop().animate({'height': '40px'}, 200);
+		$('#'+id+' .collapse_tab').css('color', 'rgb(225,0,0)');
+		localStorage.setItem('div.'+id, '40px');
+	});
+	//var audio = new Audio('source/click1.mp3');
+	//audio.play();
+};
+var expand_all = function () {
+	$('.info_box').each(function( index ) {
+		var id = $(this).attr('id');
+		$('#'+id).animate({
+			height: $('#'+id).get(0).scrollHeight
+		}, 200, function(){
+			$(this).height('auto');
+		});
+		$('#'+id+' .collapse_tab').css('color', 'rgb(0,155,0)');
+		localStorage.setItem('div.'+id, 'auto');
+	});
+	//var audio = new Audio('source/click1.mp3');
+	//audio.play();
+};
+
+var collapse_tab = function (tab) {
+	var ht = $('#'+tab).css('height');
+	if (ht === '40px') {
+		$('#'+tab).animate({
+			height: $('#'+tab).get(0).scrollHeight
+		}, 200, function(){
+			$(this).height('auto');
+		});
+		$('#'+tab+' .collapse_tab').css('color', 'rgb(0,155,0)');
+		localStorage.setItem('div.'+tab, 'auto');
 	}
-}, 500);
+	else {
+		$('#'+tab).stop().animate({'height': '40px'}, 200);
+		$('#'+tab+' .collapse_tab').css('color', 'rgb(225,0,0)');
+		localStorage.setItem('div.'+tab, '40px');
+	}
+	//var audio = new Audio('source/click1.mp3');
+	//audio.play();
+};
 
 
 
 /* ----- Top / Bottom ----- */
-
+function to_top() {	$('html, body').animate({scrollTop: '0px'}, 250); }
+function to_bottom() { $('html, body').animate({scrollTop: '10000px'}, 1000); }
 $(window).scroll(function(){
 	//$("#header").stop(true,false);
 	$("#header").css('top', ($(window).scrollTop()+0) + "px");
@@ -348,43 +390,6 @@ $(window).scroll(function(){
 		$('#wf').css('top', ($(window).scrollTop()+24) + "px");
 	}
 });
-
-function to_top() {
-	$('html, body').animate({scrollTop: '0px'}, 250);
-}
-
-function to_bottom() {
-	$('html, body').animate({scrollTop: '10000px'}, 1000);
-}
-
-
-/* ----- Collapse / Expand ----- */
-var collapse_all = function () {
-	$('.info_box').each(function( index ) {
-		var id = $(this).attr('id');
-		if (id != 'conclave') {
-			$('#'+id).stop().animate({'height': '40px'}, 200);
-			$('#'+id+' .collapse_tab').css('color', 'rgb(225,0,0)');
-		}
-	});
-	var audio = new Audio('source/click1.mp3');
-	//audio.play();
-};
-var expand_all = function () {
-	$('.info_box').each(function( index ) {
-		var id = $(this).attr('id');
-		$('#'+id).animate({
-			height: $('#'+id).get(0).scrollHeight
-		}, 200, function(){
-			$(this).height('auto');
-		});
-		$('#'+id+' .collapse_tab').css('color', 'rgb(0,155,0)');
-	});
-	var audio = new Audio('source/click1.mp3');
-	//audio.play();
-};
-
-
 
 
 
@@ -624,6 +629,11 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 get_data();
 
 
+/* ----- Help ----- */
+var help_open = function () { $('#preview_help').css('visibility', 'visible'); };
+var help_close = function () {	$('#preview_help').css('visibility', 'hidden'); };
+
+
 
 /* ----- Preview Void Stuff ----- */
 var void_close = function () {
@@ -649,6 +659,26 @@ $(document).keydown(function(e) {
 });
 
 
+
+
+
+
+/* ----- Header shrink ----- */
+var scrollD = function () {
+	$('#header').css('height', '40px').css('padding-top', '3px').css('font-size', '20px');
+	$('#header #icons').css('top', '10px');
+	$('#header img').css('height', '30px');
+};
+
+var scrollU = function () {
+	$('#header').css('height', '80px').css('padding-top', '20px').css('font-size', '24px');
+	$('#header #icons').css('top', '29px');
+	$('#header img').css('height', '40px');
+};
+
+$(document).scroll(function(e) {
+	$(window).scrollTop() > 10 ? scrollD() : scrollU();
+});
 
 
 /* ----- Fix mobile background issue ----- */
