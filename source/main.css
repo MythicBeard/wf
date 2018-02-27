@@ -24,6 +24,7 @@ div, p, a, ul, li, tr, td, img {
 	text-size-adjust:none !important;
 }
 
+/* Optimize images */
 img {image-rendering: -webkit-optimize-contrast;}
 	
 

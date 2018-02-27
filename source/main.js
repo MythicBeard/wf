@@ -2,7 +2,10 @@ var loading = true;
 if ('speechSynthesis' in window) {} else
 	alert('Your antiquated web browser does not support speech synthesis.  Upgrade, or use something decent, to enable voice tracking.');
 
-
+for (var i = 0; i < localStorage.length; i++){
+	console.log(localStorage.key(i)+' = '+localStorage.getItem(localStorage.key(i)));
+}
+//localStorage.clear();
 /* ----- Auto refresh ----- */
 var refresh = {
 	'rate': 30,
@@ -105,7 +108,7 @@ setTimeout(function () {
 		$('#header #sound').css('color', 'rgb(155,0,0)');
 	
 	$('#volume').on('input',function(e){
-		var vol = $('#volume').val();
+		var vol = Math.ceil($('#volume').val());
 		localStorage.setItem('msg.volume', vol);
 	});
 	$('#volume').val(speech.volume);
@@ -137,7 +140,7 @@ speech.say = function (phrase) {
 			vol = 1;
 		else if (vol < 0.01)
 			vol = .01;
-		localStorage.setItem('msg.volume', vol*100);
+		localStorage.setItem('msg.volume', Math.ceil(vol*100));
 		msg.volume = vol;
 		msg.onstart = function () {
 			$('#header #logo img').css('filter', 'drop-shadow(0px 0px 3px goldenrod)');
@@ -696,29 +699,33 @@ $(document).keydown(function(e) {
 	
 	// ALT+UP/DOWN
 	if (e.keyCode == 38 && e.altKey)
-		to_top();
+		collapse_all();
 	if (e.keyCode == 40 && e.altKey)
-		to_bottom();
+		expand_all();
 	
 	// SHIFT+UP/DOWN
 	if (e.keyCode == 38 && e.shiftKey)
-		collapse_all();
+		to_top();
 	if (e.keyCode == 40 && e.shiftKey)
-		expand_all();
+		to_bottom();
 	
 	// CTRL+UP/DOWN
 	if (e.keyCode == 38 && e.ctrlKey) {
 		e.preventDefault();
-		let vol = Number($('#volume').val())+1;
-		if (vol <= 100 && vol >= 0)
+		let vol = Math.ceil(Number($('#volume').val())+1);
+		if (vol <= 100 && vol >= 0) {
 			$('#volume').val(vol);
+			localStorage.setItem('msg.volume', vol);
+		}
 		return false;
 	}
 	if (e.keyCode == 40 && e.ctrlKey) {
 		e.preventDefault();
-		let vol = Number($('#volume').val())-1;
-		if (vol <= 100 && vol >= 0)
+		let vol = Math.ceil(Number($('#volume').val())-1);
+		if (vol <= 100 && vol >= 0) {
 			$('#volume').val(vol);
+			localStorage.setItem('msg.volume', vol);
+		}
 		return false;
 	}
 
