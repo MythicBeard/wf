@@ -7,6 +7,7 @@ if ('speechSynthesis' in window) {} else
 var refresh = {
 	'rate': 30,
 	'on': true,
+	'last': 0,
 };
 
 refresh.get_saved = function () {
@@ -76,7 +77,6 @@ refresh.flash = function () {
 	$('#logo img').animate({opacity: 0.25}, 400, 'linear');
 	setTimeout(function () {$('#logo img').animate({opacity: 1}, 400);}, 600, 'linear');
 };
-//setTimeout(function(){refresh.flash();}, 400);
 
 
 /* ----- Speech ----- */
@@ -108,8 +108,6 @@ setTimeout(function () {
 		var vol = $('#volume').val();
 		localStorage.setItem('msg.volume', vol);
 	});
-	
-	
 	$('#volume').val(speech.volume);
 	
 }, 10);
@@ -164,7 +162,6 @@ speech.next = function () {
 	var total = Object.keys(speech.queue).length;
 	if (total !== 0)
 		return;
-	
 	clearInterval(speech.interval);
 	delete speech.interval;
 };
@@ -244,8 +241,6 @@ var cetus_alarm = {
 	1:true,
 };
 track.cetusCycle = function (time, left) {
-	if (!track.tracking.cetusCycle)
-		return;
 	if (left.match('h'))
 		return;
 	var min = Number(left.replace('m', ''));
@@ -260,12 +255,12 @@ track.cetusCycle = function (time, left) {
 		next = 'night';
 	else
 		next = 'day';
-	//if (loading !== true && stop !== true)
+	if (loading !== true && stop !== true && track.tracking.cetusCycle)
 		speech.addqueue('Cetus '+next+'time is in, '+min+' minutes');
 };
 
 track.alerts = function (alerts) {
-	if (!track.tracking.alerts || alerts.length <= 0)
+	if (alerts.length <= 0)
 		return;
 	for (let i=0; i<alerts.length; i++) {
 		var at = alerts[i];
@@ -280,7 +275,7 @@ track.alerts = function (alerts) {
 		track.old.alerts[at.id] = t;
 		if (at.mission.reward.itemString == '')
 			at.mission.reward.itemString = at.mission.reward.credits+' Credits';
-		if (loading !== true)
+		if (loading !== true && track.tracking.alerts)
 			speech.addqueue('Mission alert for, '+at.mission.reward.itemString);
 	}
 	for (let key in track.old.alerts) {
@@ -293,8 +288,6 @@ track.alerts = function (alerts) {
 };
 
 track.fissures = function (fissures) {
-	if (!track.tracking.fissures)
-		return;
 	for (let i=0; i<fissures.length; i++) {
 		var fs = fissures[i];
 		if (track.old.fissures[fs.id])
@@ -306,7 +299,7 @@ track.fissures = function (fissures) {
 		var d = new Date();
 		var t = d.getTime();
 		track.old.fissures[fs.id] = t;
-		if (loading !== true)
+		if (loading !== true && track.tracking.fissures === true)
 			speech.addqueue('Void fissure open, T'+fs.tierNum+' '+fs.missionType);
 	}
 	for (let key in track.old.fissures) {
@@ -338,7 +331,6 @@ var collapsed_saved = function () {
 			return true;
 		else
 			$('#'+id).css('height', saved);
-			//$('#'+id).stop().animate({'height': saved}, 10);
 	});
 };
 setTimeout(function(){collapsed_saved();}, 20);
@@ -394,8 +386,8 @@ var collapse_tab = function (tab) {
 
 
 /* ----- Top / Bottom ----- */
-function to_top() {	$('html, body').animate({scrollTop: '0px'}, 250); }
-function to_bottom() { $('html, body').animate({scrollTop: '10000px'}, 1000); }
+function to_top() {	$('body').stop().animate({scrollTop: '0px'}, 250); }
+function to_bottom() { $('body').stop().animate({scrollTop: $(document).height()}, 250); }
 $(window).scroll(function(){
 	//$("#header").stop(true,false);
 	$("#header").css('top', ($(window).scrollTop()+0) + "px");
@@ -415,7 +407,8 @@ $(window).scroll(function(){
 
 /* ---- Load Everything ----- */
 var get_data = function () {
-$('#header #refresh').css('color', 'rgb(185,185,0)');
+$('#header #refresh').css('opacity', '0.3');
+//refresh.flash();
 var wf = {};
 $.getJSON('https://ws.warframestat.us/pc', function (data) {
 	wf = data;
@@ -455,6 +448,8 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 	$('#cetusCycle #time').html(cetusc.time);
 	$('#cetusCycle #sundial').html('<img src="source/time-'+cetusc.time+'.png">');
 	var cetusLeft = wf.cetusCycle.timeLeft.replace(new RegExp(" \\d+s","g"), '');
+	if (cetusLeft == '')
+		cetusLeft = '< 1m';
 	$('#cetusCycle #left').html(cetusLeft);
 	
 	setTimeout(function(){ track.cetusCycle(cetusc.time, cetusLeft); }, 300);
@@ -575,7 +570,6 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 	for (let i=0; i<fisses.Neo.length; i++) show_fiss(fisses.Neo[i]);
 	$('#fissures #info').append('<tr class="fs_spacer"><td colspan="4"</tr>');
 	for (let i=0; i<fisses.Axi.length; i++) show_fiss(fisses.Axi[i]);
-	
 	setTimeout(function() {track.fissures(wf.fissures);}, 150);
 
 
@@ -649,8 +643,11 @@ $.getJSON('https://ws.warframestat.us/pc', function (data) {
 
 	
 	/* ----- Finish ----- */
-	$('#header #refresh').css('color', 'rgb(0,155,0)');
-	refresh.flash();
+	//$('#header #refresh').css('color', 'rgb(0,155,0)');
+	$('#header #refresh').css('opacity', '1');
+	var d = new Date();
+	var t = d.getTime();
+	refresh.last = t;
 	if (loading !== false)
 		setTimeout(function () { loading = false; }, 9000);
 });
@@ -664,6 +661,8 @@ var help_close = function () {	$('#preview_help').css('visibility', 'hidden'); }
 
 
 
+
+
 /* ----- Preview Void Stuff ----- */
 var void_close = function () {
 	$('#preview_void').css('visibility', 'hidden');
@@ -671,24 +670,64 @@ var void_close = function () {
 var void_open = function () {
 	$('#preview_void').css('visibility', 'visible');
 };
+
+
+
+
+/* ----- Key binds ----- */
+var kb = {
+	'up': function () {
+		$('body').animate({scrollTop: '0px'}, 250); 
+	},
+};
 $(document).keydown(function(e) {
 	// CTRL+R & F5
-	if (event.keyCode == 116 || event.keyCode == 82 && e.ctrlKey) {
-		event.keyCode = 0;
-		event.cancelBubble = true;
-		$('#header #refresh').css('color', 'rgba(185, 185, 0, 1)');
-		get_data();
-		//return false;
+	if (e.keyCode == 116 || e.keyCode == 82 && e.ctrlKey && !e.shiftKey) {
+		e.preventDefault();
+		/*
+		var d = new Date();
+		var t = d.getTime();
+		var diff = t-refresh.last;
+		if (diff > 999)
+			*/
+			get_data();
+		return false;
 	}
+	
+	// ALT+UP/DOWN
+	if (e.keyCode == 38 && e.altKey)
+		to_top();
+	if (e.keyCode == 40 && e.altKey)
+		to_bottom();
+	
+	// SHIFT+UP/DOWN
+	if (e.keyCode == 38 && e.shiftKey)
+		collapse_all();
+	if (e.keyCode == 40 && e.shiftKey)
+		expand_all();
+	
+	// CTRL+UP/DOWN
+	if (e.keyCode == 38 && e.ctrlKey) {
+		e.preventDefault();
+		let vol = Number($('#volume').val())+1;
+		if (vol <= 100 && vol >= 0)
+			$('#volume').val(vol);
+		return false;
+	}
+	if (e.keyCode == 40 && e.ctrlKey) {
+		e.preventDefault();
+		let vol = Number($('#volume').val())-1;
+		if (vol <= 100 && vol >= 0)
+			$('#volume').val(vol);
+		return false;
+	}
+
     // ESC
     if (e.keyCode == 27) {
         void_close();
 		help_close();
     }
 });
-
-
-
 
 
 
