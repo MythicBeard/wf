@@ -1,10 +1,11 @@
 var loading = true;
 if ('speechSynthesis' in window) {} else
 	alert('Your antiquated web browser does not support speech synthesis.  Upgrade, or use something decent, to enable voice tracking.');
-
+/*
 for (var i = 0; i < localStorage.length; i++){
 	console.log(localStorage.key(i)+' = '+localStorage.getItem(localStorage.key(i)));
 }
+*/
 //localStorage.clear();
 /* ----- Auto refresh ----- */
 var refresh = {
@@ -204,7 +205,7 @@ var track = {
 		'alerts': {},
 		'cetusCycle': 0,
 		'fissures': {},
-		'invasions': {},
+		//'invasions': {},
 	},
 	'tracking': {
 		'alerts': true,
@@ -659,8 +660,22 @@ get_data();
 
 
 /* ----- Help ----- */
-var help_open = function () { $('#preview_help').css('visibility', 'visible'); };
-var help_close = function () {	$('#preview_help').css('visibility', 'hidden'); };
+var help_open = function () {
+	$('#preview_help').css('visibility', 'visible').stop().animate({'opacity': 1}, 150);
+};
+var help_close = function () {
+	$('#preview_help').stop().animate({'opacity': 0}, 150, function () {
+		$('#preview_help').css('visibility', 'hidden');
+	});
+};
+//localStorage.removeItem('hide_help');
+var hide_help = localStorage.getItem('hide_help');
+if (hide_help == null)
+	setTimeout(function () {
+		help_open();
+		localStorage.setItem('hide_help', 'true');
+	}, 1000);
+
 
 
 
@@ -680,7 +695,7 @@ var void_open = function () {
 /* ----- Key binds ----- */
 var kb = {
 	'up': function () {
-		$('body').animate({scrollTop: '0px'}, 250); 
+		$('body').stop().animate({scrollTop: '0px'}, 250); 
 	},
 };
 $(document).keydown(function(e) {
@@ -731,8 +746,10 @@ $(document).keydown(function(e) {
 
     // ESC
     if (e.keyCode == 27) {
+		e.preventDefault();
         void_close();
 		help_close();
+		return false;
     }
 });
 
